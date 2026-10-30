@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Para a Yasmin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #ffc8dd;
+    color: #590d22;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+    touch-action: manipulation;
+  }
+  .card { max-width: 520px; width: 100%; }
+  h1 { font-size: clamp(24px, 7vw, 34px); margin: 0 0 18px; }
+  p { font-size: clamp(15px, 4.2vw, 18px); line-height: 1.5; margin: 0 0 16px; }
+  .botoes { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 24px; min-height: 130px; }
+  button {
+    font-family: inherit; font-weight: 700; color: #590d22;
+    background: #ffb3c1; border: 3px ridge #ff8fa3; border-radius: 12px;
+    padding: 14px 22px; cursor: pointer;
+  }
+  #sim { font-size: 18px; }
+  #nao { font-size: 14px; }
+  #nao.solto { position: fixed; transition: left .15s, top .15s; z-index: 5; }
+  .overlay {
+    position: fixed; inset: 0; background: rgba(89, 13, 34, .45);
+    display: none; align-items: center; justify-content: center; padding: 20px; z-index: 10;
+  }
+  .overlay.ativo { display: flex; }
+  .modal {
+    background: #fff0f5; border-radius: 16px; padding: 24px 20px;
+    max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: left;
+  }
+  .modal h2 { margin: 0 0 14px; text-align: center; font-size: 22px; }
+  .modal p, .modal li { font-size: 16px; line-height: 1.5; }
+  .modal ul { padding-left: 20px; margin: 0 0 16px; }
+  .modal .fim { text-align: center; }
+  .modal button { display: block; margin: 8px auto 0; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>ATENÇÃO, YASMIN!</h1>
+    <p>Foi detectado um excesso de interesse da minha parte.</p>
+    <p>Após análise dos dados, constatou-se que a distância entre JP e CG não é suficiente para impedir essa aproximação.</p>
+    <p>Deseja prosseguir com essa operação?</p>
+    <div class="botoes">
+      <button id="sim">ACEITO A MISSÃO 💗</button>
+      <button id="nao">NÃO 😢</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="ok">
+    <div class="modal">
+      <h2>ACESSO AUTORIZADO</h2>
+      <p><strong>YASMIN, SUA RESPOSTA FOI REGISTRADA COM SUCESSO! 💗</strong></p>
+      <p>Após uma nova análise, concluímos que:</p>
+      <ul>
+        <li>O interesse é recíproco? Fortes indícios que sim. 👀</li>
+        <li>A distância entre JP e CG? Um pequeno detalhe logístico.</li>
+        <li>A vontade de te encontrar? Em níveis preocupantes.</li>
+      </ul>
+      <p>Próxima missão: te ver e confirmar pessoalmente se a química funciona tão bem quanto nas conversas!</p>
+      <p class="fim">Sistema encerrado. Ansiedade pelo encontro iniciada. ♡</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="erro">
+    <div class="modal">
+      <h2>Erro</h2>
+      <p class="fim">Erro 404: resposta não encontrada</p>
+      <button id="fechaErro">OK</button>
+    </div>
+  </div>
+
+<script>
+  const nao = document.getElementById('nao');
+  const sim = document.getElementById('sim');
+  // Quantas vezes o "Não" foge antes de deixar ela clicar
+  const ehToque = window.matchMedia('(pointer: coarse)').matches;
+  const maxFugas = ehToque ? 25 : 12; // celular: 25 / computador: 12
+  const raioToque = 80; // no celular, foge se o dedo encostar a menos de 80px dele
+  let fugas = 0;
+
+  function fugir(e) {
+    if (fugas >= maxFugas) return;
+    if (e && e.cancelable) e.preventDefault();
+    fugas++;
+    nao.classList.add('solto');
+    const w = nao.offsetWidth, h = nao.offsetHeight;
+    const margem = 12;
+    const antes = nao.getBoundingClientRect();
+    const minDist = Math.min(window.innerWidth, window.innerHeight) * 0.45;
+    let x, y;
+    // sorteia um ponto bem longe de onde ele estava
+    for (let i = 0; i < 15; i++) {
+      x = margem + Math.random() * (window.innerWidth - w - margem * 2);
+      y = margem + Math.random() * (window.innerHeight - h - margem * 2);
+      if (Math.hypot(x - antes.left, y - antes.top) > minDist) break;
+    }
+    nao.style.left = x + 'px';
+    nao.style.top = y + 'px';
+  }
+
+  nao.addEventListener('pointerenter', fugir);
+  nao.addEventListener('touchstart', fugir, { passive: false });
+  nao.addEventListener('pointerdown', fugir);
+
+  // Celular: o botão foge antes mesmo do dedo acertar nele
+  document.addEventListener('touchstart', (e) => {
+    if (fugas >= maxFugas || e.target === sim) return; // não atrapalha o toque no "Sim"
+    const t = e.touches[0];
+    const r = nao.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    if (Math.hypot(t.clientX - cx, t.clientY - cy) < raioToque + r.width / 2) fugir(e);
+  }, { passive: false });
+
+  nao.addEventListener('click', () => {
+    if (fugas >= maxFugas) document.getElementById('erro').classList.add('ativo');
+  });
+  document.getElementById('fechaErro').addEventListener('click', () => {
+    document.getElementById('erro').classList.remove('ativo');
+  });
+  sim.addEventListener('click', () => {
+    document.getElementById('ok').classList.add('ativo');
+  });
+</script>
+</body>
+</html>
